@@ -4,44 +4,49 @@ import org.apache.commons.collections4.queue.CircularFifoQueue
 import scala.collection.mutable
 import scala.language.unsafeNulls
 import scala.io.Source
+import mainargs.ParserForMethods
+import mainargs.arg
+import org.log4s._
+//import Logs4sConfig._
 
 object Main:
   // Default values for arguments
   val CLOUD_SIZE = 10
   val LENGTH_AT_LEAST = 6
   val WINDOW_SIZE = 1000
+  private val logger = org.log4s.getLogger
+  //logger.debug(f"howMany = $howMany minLength = $minLength lastNWords = $lastNWords")
+  def initLogging(): Unit = {
+    // Log4s doesn't have setLoggerThreshold, etc. We configure log levels via application configuration.
+    
+    // Loggers are configured directly using logger names. You typically do this in a configuration file.
+    // Here is an example of logging at different levels:
+    logger.trace("This is a trace message") // Will not be printed if level is set to higher
+    logger.debug("This is a debug message") // Will not be printed if level is set to higher
+    logger.info("This is an info message") // Will be printed
+    logger.warn("This is a warning message") // Will be printed
+    logger.error("This is an error message") // Will be printed
 
-  def main(args: Array[String]) =
 
-    // Argument validity
-    if (args.length > 3) {
-      System.err.nn.println("usage: ./target/universal/stage/bin/main [cloud-size] [length-at-least] [window-size]")
-      System.exit(2)
-    }
+    // Since there are no ways to add appenders. Log4s does not allow you to add appenders directly in this way.
+    // You would typically set appenders in a logging configuration file (e.g., log4s.xml or log4s.properties).
+  }
+
+  def main(args: Array[String]): Unit = ParserForMethods(this).runOrExit(args.toIndexedSeq)
+  @main
+  def run(
+    @arg(short = 'c', doc = "size of the sliding word cloud") cloudSize: Int = 10,
+    @arg(short = 'l', doc = "minimum word length to be considere") minLength: Int = 6,
+    @arg(short = 'w', doc = "size of the sliding FIFO queue") windowSize: Int = 1000,
+    @arg(short = 's', doc = "number of steps between word cloud updates") everyKSteps: Int = 10,
+    @arg(short = 'f', doc = "minimum frequency for a word to be included in the cloud") minFrequency: Int = 3) =
+
+  logger.debug(f"howMany=$cloudSize minLength=$minLength lastNWords=$windowSize everyKSteps=$everyKSteps minFrequency=$minFrequency")
 
     // Parse the command-line argument or use the default value
     var cloud_size = CLOUD_SIZE
     var length_at_least = LENGTH_AT_LEAST
     var window_size = WINDOW_SIZE
-
-    try {
-      if (args.length >= 1) {
-        cloud_size = args(0).toInt
-        if (cloud_size < 1) throw new NumberFormatException()
-      }
-      if (args.length >= 2) {
-        length_at_least = args(1).toInt
-        if (length_at_least < 1) throw new NumberFormatException()
-      }
-      if (args.length == 3) {
-        window_size = args(2).toInt
-        if (window_size < 1) throw new NumberFormatException()
-      }
-    } catch {
-      case _: NumberFormatException =>
-        Console.err.println("The arguments should be natural numbers")
-        System.exit(4)
-    }
 
     // Set up input from stdin and process words
     val lines = scala.io.Source.fromInputStream(System.in)("UTF-8").getLines
