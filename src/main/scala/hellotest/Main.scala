@@ -7,7 +7,7 @@ import scala.io.Source
 import mainargs.ParserForMethods
 import mainargs.arg
 import org.log4s._
-//import Logs4sConfig._
+import sun.misc.{Signal, SignalHandler}
 
 object Main:
   // Default values for arguments
@@ -26,6 +26,18 @@ object Main:
     logger.warn("This is a warning message") // Will be printed
     logger.error("This is an error message") // Will be printed
   }
+
+  // Sets up the SIGPIPE handler
+  
+  def setupSigpipeHandler(): Unit = {
+  val handler = new SignalHandler {
+    def handle(signal: Signal): Unit = {
+      logger.info("Received sigpipe, now exiting")
+      System.exit(0)
+    }
+  }
+  Signal.handle(new Signal("PIPE"), handler)
+}
 
   def main(args: Array[String]): Unit = ParserForMethods(this).runOrExit(args.toIndexedSeq)
   @main 
