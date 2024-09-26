@@ -15,3 +15,5 @@ libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-simple" % "1.7.30" 
 )
 enablePlugins(JavaAppPackaging)
+
+Compile / mainClass := Some("hellotest.run")

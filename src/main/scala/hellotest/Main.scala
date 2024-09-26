@@ -40,18 +40,22 @@ object Main:
 }
 
   def main(args: Array[String]): Unit = ParserForMethods(this).runOrExit(args.toIndexedSeq)
+
   @main 
   def run(
     @arg(short = 'c', doc = "size of the sliding word cloud") cloudSize: Int = CLOUD_SIZE,
     @arg(short = 'l', doc = "minimum word length to be considered") minLength: Int = LENGTH_AT_LEAST,
     @arg(short = 'w', doc = "size of the sliding FIFO queue") windowSize: Int = WINDOW_SIZE,
     @arg(short = 's', doc = "number of steps between word cloud updates") everyKSteps: Int = 10,
-    @arg(short = 'f', doc = "minimum frequency for a word to be included in the cloud") minFrequency: Int = 3) =
+    @arg(short = 'f', doc = "minimum frequency for a word to be included in the cloud") minFrequency: Int = 3
+    ): Unit =
 
     logger.debug(f"howMany=$cloudSize minLength=$minLength lastNWords=$windowSize everyKSteps=$everyKSteps minFrequency=$minFrequency")
     
+    var cloud_size = CLOUD_SIZE
+    var length_at_least = LENGTH_AT_LEAST
+    var window_size = WINDOW_SIZE
     
-
     // Set up input from stdin and process words
     val lines = scala.io.Source.fromInputStream(System.in)("UTF-8").getLines
 
@@ -59,12 +63,14 @@ object Main:
 
     val queue = new CircularFifoQueue[String](windowSize)
 
+    var stepCounter = 0
+
     // Process words and update word cloud
     words.filter(_.length >= minLength).foreach { word =>
       queue.add(word) // Add word to the queue
 
       // start processing when the queue is full with window_size
-      if (queue.size == windowSize) {
+      if (queue.size == windowSize && stepCounter % everyKSteps == 0) {
         val wordCount = mutable.Map[String, Int]()
         queue.forEach { w =>
           wordCount(w) = wordCount.getOrElse(w, 0) + 1
