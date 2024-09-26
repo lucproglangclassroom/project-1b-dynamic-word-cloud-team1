@@ -9,6 +9,7 @@ scalacOptions += "@.scalacOptions.txt"
 libraryDependencies ++= Seq(
   "org.scalatest"  %% "scalatest"  % "3.2.19"  % Test,
   "org.scalacheck" %% "scalacheck" % "1.18.0" % Test,
+  "org.scalatestplus" %% "scalacheck-1-17" % "3.2.15.0" % Test,
   "com.lihaoyi" %% "mainargs" % "0.6.3",
   "org.apache.commons" % "commons-collections4" % "4.4",
   "org.log4s" %% "log4s" % "1.10.0",
