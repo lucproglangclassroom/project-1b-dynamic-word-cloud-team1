@@ -10,6 +10,29 @@ import mainargs.{main, arg, ParserForMethods, Flag}
 import org.log4s._
 import sun.misc.{Signal, SignalHandler}
 
+// OutputSink trait for output abstraction
+trait OutputSink {
+  def doOutput(value: String): Unit
+}
+
+// ConsoleOutputSink for standard output
+class ConsoleOutputSink extends OutputSink {
+  def doOutput(value: String): Unit = {
+    println(value)
+  }
+}
+
+// TestOutputSink for capturing output in tests
+class TestOutputSink extends OutputSink {
+  private val outputValues = scala.collection.mutable.ListBuffer.empty[String]
+
+  def doOutput(value: String): Unit = {
+    outputValues += value
+  }
+
+  def result: Seq[String] = outputValues.toSeq
+}
+
 object Main:
   // Default values for arguments
   val CLOUD_SIZE = 10
@@ -27,7 +50,6 @@ object Main:
   }
 
   // Sets up the SIGPIPE handler
-  
   def setupSigpipeHandler(): Unit = {
   val handler = new SignalHandler {
     def handle(signal: Signal): Unit = {
@@ -51,6 +73,7 @@ object Main:
     @arg(short = 's', doc = "number of steps between word cloud updates") everyKSteps: Int = 10,
     @arg(short = 'f', doc = "minimum frequency for a word to be included in the cloud") minFrequency: Int = 3
     ): Unit =
+
     println("Hello mainargs!")
     println(s"Today's date is ${java.time.LocalDate.now}.")
     println()
@@ -68,9 +91,20 @@ object Main:
     
     // Set up input from stdin and process words
     val lines = scala.io.Source.fromInputStream(System.in)("UTF-8").getLines
-
     val words = lines.flatMap(l => l.split("(?U)[^\\p{Alpha}0-9']+")).map(_.toLowerCase)
+    val outputSink = new ConsoleOutputSink()
 
+    wordCloud(cloudSize, minLength, windowSize, everyKSteps, words, outputSink)
+   
+
+  def wordCloud(
+    cloudSize: Int,
+    minLength: Int,
+    windowSize: Int,
+    everyKSteps: Int,
+    words: Iterator[String],
+    output: outputSink // Accept words as an argument
+  ): Unit = 
     val queue = new CircularFifoQueue[String](windowSize)
 
     var stepCounter = 0
@@ -88,9 +122,9 @@ object Main:
 
         val sortedWords = wordCount.toSeq.sortBy { case (word, count) => (-count, word) }
 
-         val topWords = sortedWords.take(cloudSize)
-
-        println(topWords.map { case (word, count) => s"$word: $count" }.mkString(" "))
+        val topWords = sortedWords.take(cloudSize)
+        output.doOutput(topWords.map { case (word, count) => s"$word: $count" }.mkString(" "))
+        //println(topWords.map { case (word, count) => s"$word: $count" }.mkString(" "))
         if (System.out.checkError()) {
           println("Error writing to stdout. Exiting.")
           sys.exit(1)  // Exit with a failure code

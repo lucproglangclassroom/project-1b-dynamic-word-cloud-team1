@@ -30,7 +30,7 @@ class WordCloudSpec extends AnyFlatSpec with Matchers{
     queue.size() shouldEqual 3
     queue.poll() shouldEqual "World" // "Hello" should be evicted
   }
-
+  //TODO: empty queue poll should return null
   it should "handle empty states correctly" in {
     val emptyQueue = new CircularFifoQueue[String](2)  
     an[NoSuchElementException] should be thrownBy emptyQueue.poll()
