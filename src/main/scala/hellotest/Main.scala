@@ -6,6 +6,7 @@ import scala.language.unsafeNulls
 import scala.io.Source
 import mainargs.ParserForMethods
 import mainargs.arg
+import mainargs.{main, arg, ParserForMethods, Flag}
 import org.log4s._
 import sun.misc.{Signal, SignalHandler}
 
@@ -17,8 +18,6 @@ object Main:
   private val logger = org.log4s.getLogger
   //logger.debug(f"howMany = $howMany minLength = $minLength lastNWords = $lastNWords")
   def initLogging(): Unit = {
-    // Log4s doesn't have setLoggerThreshold, etc. We configure log levels via application configuration.
-    
     // Loggers are configured directly using logger names. 
     logger.trace("This is a trace message") // Will not be printed if level is set to higher
     logger.debug("This is a debug message") // Will not be printed if level is set to higher
@@ -39,7 +38,10 @@ object Main:
   Signal.handle(new Signal("PIPE"), handler)
 }
 
-  def main(args: Array[String]): Unit = ParserForMethods(this).runOrExit(args.toIndexedSeq)
+  def main(args: Array[String]): Unit = 
+    ParserForMethods(this).runOrExit(args.toIndexedSeq)
+    ()
+
 
   @main 
   def run(
@@ -49,7 +51,15 @@ object Main:
     @arg(short = 's', doc = "number of steps between word cloud updates") everyKSteps: Int = 10,
     @arg(short = 'f', doc = "minimum frequency for a word to be included in the cloud") minFrequency: Int = 3
     ): Unit =
-
+    println("Hello mainargs!")
+    println(s"Today's date is ${java.time.LocalDate.now}.")
+    println()
+    println("You provided the following command-line arguments:")
+    println(s"cloudSize = $cloudSize")
+    println(s"minLength = $minLength")
+    println(s"windowSize = $windowSize")
+    println(s"everyKSteps = $everyKSteps")
+    println(s"minFrequency = $minFrequency")
     logger.debug(f"howMany=$cloudSize minLength=$minLength lastNWords=$windowSize everyKSteps=$everyKSteps minFrequency=$minFrequency")
     
     var cloud_size = CLOUD_SIZE
