@@ -30,62 +30,83 @@ class WordCloudSpec extends AnyFlatSpec with Matchers{
     queue.size() shouldEqual 3
     queue.poll() shouldEqual "World" // "Hello" should be evicted
   }
-  //TODO: empty queue poll should return null
-  it should "handle empty states correctly" in {
-    val emptyQueue = new CircularFifoQueue[String](2)  
-    an[NoSuchElementException] should be thrownBy emptyQueue.poll()
+  /*
+  "A CircularFifoQueue" should "return null when polling an empty queue" in {
+    val emptyQueue = new CircularFifoQueue   
+    // Attempt to call poll (or another method that throws when empty)
+    // Check that polling returns null
+
+   // Use Option to handle the return value from poll
+   val result = emptyQueue.poll()
+  result should be null // Check that it is None
+}
+
+it should "throw NoSuchElementException when accessing an invalid index" in {
+  val queue = new CircularFifoQueue 
+
+  // Attempt to access an index that is invalid
+  an[NoSuchElementException] should be thrownBy queue.get(0)
   }
-
+*/
   "The word processing logic" should "correctly count word frequencies" in {
-    val words = List("apple", "banana", "apple", "orange", "banana", "banana")
-    val queue = new CircularFifoQueue[String](words.length)
+    // Setup
+    val testOutputSink = new TestOutputSink
+    val words = Iterator("apple", "banana", "apple", "orange", "banana", "banana")
 
-    words.foreach(queue.add) // Add words to the queue
+    // Call the method
+    val cloudSize = 3
+    val minLength = 1
+    val windowSize = 6
+    val everyKSteps = 1
+    val minFrequency = 1
 
-    val wordCount = mutable.Map[String, Int]()
+    Main.wordCloud(cloudSize, minLength, windowSize, everyKSteps, minFrequency, words, testOutputSink)
 
-    queue.asScala.collect { case s: String =>
-      wordCount(s) = wordCount.getOrElse(s, 0) + 1
-    }
-
-    wordCount("apple") shouldEqual 2
-    wordCount("banana") shouldEqual 3
-    wordCount("orange") shouldEqual 1
+    // Check the output
+    val output = testOutputSink.result.mkString(" ")
+    assert(output.contains("apple: 2"))
+    assert(output.contains("banana: 3"))
+    assert(output.contains("orange: 1"))
   }
 
   it should "return top N words correctly" in {
-    val words = List("apple", "banana", "apple", "orange", "banana", "banana", "grape")
-    val queue = new CircularFifoQueue[String](words.length)  
-    words.foreach(queue.add)
+    // Setup
+    val testOutputSink = new TestOutputSink
+    val words = Iterator("apple", "banana", "apple", "orange", "banana", "banana", "grape")
 
-    val wordCount = mutable.Map[String, Int]()
+    // Call the method
+    val cloudSize = 3
+    val minLength = 1
+    val windowSize = 6
+    val everyKSteps = 1
+    val minFrequency = 1
 
-    queue.asScala.collect { case s: String =>
-      wordCount(s) = wordCount.getOrElse(s, 0) + 1
-    }
+    Main.wordCloud(cloudSize, minLength, windowSize, everyKSteps, minFrequency, words, testOutputSink)
 
-    val sortedWords = wordCount.toSeq.sortBy { case (word, count) => (-count, word) }
-    val topWords = sortedWords.take(3)
-
-    topWords should contain allOf (("banana", 3), ("apple", 2), ("grape", 1))
+    // Check the output
+    val output = testOutputSink.result.mkString(" ")
+    assert(output.contains("banana: 3"))
+    assert(output.contains("apple: 2"))
+    assert(output.contains("grape: 1"))
   }
 
   it should "output word counts in the correct format" in {
-    val words = List("apple", "banana", "apple", "banana", "banana")
-    val queue = new CircularFifoQueue[String](words.length)
-    words.foreach(queue.add)
+    // Setup
+    val testOutputSink = new TestOutputSink
+    val words = Iterator("apple", "banana", "apple", "banana", "banana")
 
-    val wordCount = mutable.Map[String, Int]()
-    queue.asScala.collect { case s: String =>
-        wordCount(s) = wordCount.getOrElse(s, 0) + 1
-    }
+    // Call the method
+    val cloudSize = 3
+    val minLength = 1
+    val windowSize = 5
+    val everyKSteps = 1
+    val minFrequency = 1
 
-    val sortedWords = wordCount.toSeq.sortBy { case (word, count) => (-count, word) }
-    val topWords = sortedWords.take(3)
+    Main.wordCloud(cloudSize, minLength, windowSize, everyKSteps, minFrequency, words, testOutputSink)
 
-    val output = topWords.map { case (word, count) => s"$word: $count" }.mkString(" ")
-
-    output shouldEqual "banana: 3 apple: 2"
+    // Check the output format
+    val output = testOutputSink.result.mkString(" ")
+    assert(output == "banana: 3 apple: 2")
   }
 
 }

@@ -38,6 +38,7 @@ object Main:
   val CLOUD_SIZE = 10
   val LENGTH_AT_LEAST = 6
   val WINDOW_SIZE = 1000
+  val MIN_FREQ = 1
   private val logger = org.log4s.getLogger
   //logger.debug(f"howMany = $howMany minLength = $minLength lastNWords = $lastNWords")
   def initLogging(): Unit = {
@@ -71,7 +72,7 @@ object Main:
     @arg(short = 'l', doc = "minimum word length to be considered") minLength: Int = LENGTH_AT_LEAST,
     @arg(short = 'w', doc = "size of the sliding FIFO queue") windowSize: Int = WINDOW_SIZE,
     @arg(short = 's', doc = "number of steps between word cloud updates") everyKSteps: Int = 10,
-    @arg(short = 'f', doc = "minimum frequency for a word to be included in the cloud") minFrequency: Int = 3
+    @arg(short = 'f', doc = "minimum frequency for a word to be included in the cloud") minFrequency: Int = MIN_FREQ
     ): Unit =
 
     println("Hello mainargs!")
@@ -85,16 +86,17 @@ object Main:
     println(s"minFrequency = $minFrequency")
     logger.debug(f"howMany=$cloudSize minLength=$minLength lastNWords=$windowSize everyKSteps=$everyKSteps minFrequency=$minFrequency")
     
-    var cloud_size = CLOUD_SIZE
-    var length_at_least = LENGTH_AT_LEAST
-    var window_size = WINDOW_SIZE
+    //var cloud_size = CLOUD_SIZE
+    //var length_at_least = LENGTH_AT_LEAST
+    //var window_size = WINDOW_SIZE
+    //var min_freq = MIN_FREQ
     
     // Set up input from stdin and process words
     val lines = scala.io.Source.fromInputStream(System.in)("UTF-8").getLines
     val words = lines.flatMap(l => l.split("(?U)[^\\p{Alpha}0-9']+")).map(_.toLowerCase)
     val outputSink = new ConsoleOutputSink()
 
-    wordCloud(cloudSize, minLength, windowSize, everyKSteps, words, outputSink)
+    wordCloud(cloudSize, minLength, windowSize, everyKSteps, minFrequency, words, outputSink)
    
 
   def wordCloud(
@@ -102,8 +104,9 @@ object Main:
     minLength: Int,
     windowSize: Int,
     everyKSteps: Int,
+    minFrequency: Int,
     words: Iterator[String],
-    output: outputSink // Accept words as an argument
+    output: OutputSink // Accept words as an argument
   ): Unit = 
     val queue = new CircularFifoQueue[String](windowSize)
 
