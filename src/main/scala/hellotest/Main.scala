@@ -10,6 +10,9 @@ import mainargs.{main, arg, ParserForMethods, Flag}
 import org.log4s._
 import sun.misc.{Signal, SignalHandler}
 
+// For console input, just in case
+import scala.io.StdIn.{readLine, readInt}
+
 // OutputSink trait for output abstraction
 trait OutputSink {
   def doOutput(value: String): Unit
@@ -65,7 +68,6 @@ object Main:
     ParserForMethods(this).runOrExit(args.toIndexedSeq)
     ()
 
-
   @main 
   def run(
     @arg(short = 'c', doc = "size of the sliding word cloud") cloudSize: Int = CLOUD_SIZE,
@@ -113,8 +115,9 @@ object Main:
     var stepCounter = 0
 
     // Process words and update word cloud
-    words.filter(_.length >= minLength).foreach { word =>
-      queue.add(word) // Add word to the queue
+    for (word <- words.filter(_.length >= minLength)) {
+      queue.add(word)
+      stepCounter += 1
 
       // start processing when the queue is full with window_size
       if (queue.size == windowSize && stepCounter % everyKSteps == 0) {
@@ -123,14 +126,18 @@ object Main:
           wordCount(w) = wordCount.getOrElse(w, 0) + 1
         }
 
-        val sortedWords = wordCount.toSeq.sortBy { case (word, count) => (-count, word) }
+        val sortedWords = wordCount.toSeq.
+        filter { case (_, count) => count >= minFrequency }
+        sortBy { case (word, count) => (-count, word) }
 
         val topWords = sortedWords.take(cloudSize)
-        output.doOutput(topWords.map { case (word, count) => s"$word: $count" }.mkString(" "))
-        //println(topWords.map { case (word, count) => s"$word: $count" }.mkString(" "))
-        if (System.out.checkError()) {
-          println("Error writing to stdout. Exiting.")
-          sys.exit(1)  // Exit with a failure code
+        if (topWords.nonEmpty) {
+          output.doOutput(topWords.map { case (word, count) => s"$word: $count" }.mkString(" "))
+          //println(topWords.map { case (word, count) => s"$word: $count" }.mkString(" "))
+          if (System.out.checkError()) {
+            println("Error writing to stdout. Exiting.")
+            sys.exit(1)  // Exit with a failure code
+          }
         }
       }
     }
