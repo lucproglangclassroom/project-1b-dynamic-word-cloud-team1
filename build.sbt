@@ -17,4 +17,4 @@ libraryDependencies ++= Seq(
 )
 enablePlugins(JavaAppPackaging)
 
-Compile / mainClass := Some("hellotest.run")
+Compile / mainClass := Some("hellotest.Main")
