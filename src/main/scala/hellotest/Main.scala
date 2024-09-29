@@ -55,13 +55,13 @@ object Main:
 
   // Sets up the SIGPIPE handler
   def setupSigpipeHandler(): Unit = {
-  val handler = new SignalHandler {
-    def handle(signal: Signal): Unit = {
-      logger.info("Received sigpipe, now exiting")
-      System.exit(0)
+    val handler = new SignalHandler {
+      def handle(signal: Signal): Unit = {
+        logger.info("Received sigpipe, now exiting")
+        System.exit(0)
     }
   }
-  Signal.handle(new Signal("PIPE"), handler)
+    Signal.handle(new Signal("PIPE"), handler)
 }
 
   def main(args: Array[String]): Unit = 
@@ -128,7 +128,7 @@ object Main:
 
         val sortedWords = wordCount.toSeq.
         filter { case (_, count) => count >= minFrequency }
-        sortBy { case (word, count) => (-count, word) }
+        .sortBy { case (word, count) => (-count, word) }
 
         val topWords = sortedWords.take(cloudSize)
         if (topWords.nonEmpty) {
