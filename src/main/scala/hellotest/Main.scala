@@ -64,7 +64,8 @@ object Main:
     Signal.handle(new Signal("PIPE"), handler)
 }
 
-  def main(args: Array[String]): Unit = 
+  def main(args: Array[String]): Unit =
+    setupSigpipeHandler() 
     ParserForMethods(this).runOrExit(args.toIndexedSeq)
     ()
 
