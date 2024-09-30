@@ -30,24 +30,8 @@ class WordCloudSpec extends AnyFlatSpec with Matchers{
     queue.size() shouldEqual 3
     queue.poll() shouldEqual "World" // "Hello" should be evicted
   }
-  /*
-  "A CircularFifoQueue" should "return null when polling an empty queue" in {
-    val emptyQueue = new CircularFifoQueue   
-    // Attempt to call poll (or another method that throws when empty)
-    // Check that polling returns null
+ 
 
-   // Use Option to handle the return value from poll
-   val result = emptyQueue.poll()
-  result should be null // Check that it is None
-}
-
-it should "throw NoSuchElementException when accessing an invalid index" in {
-  val queue = new CircularFifoQueue 
-
-  // Attempt to access an index that is invalid
-  an[NoSuchElementException] should be thrownBy queue.get(0)
-  }
-*/
   "The word processing logic" should "correctly count word frequencies" in {
     // Setup
     val testOutputSink = new TestOutputSink
@@ -109,6 +93,85 @@ it should "throw NoSuchElementException when accessing an invalid index" in {
     assert(output == "banana: 3 apple: 2")
   }
 
+  
+  it should "not produce output for empty input" in {
+    val testOutputSink = new TestOutputSink
+    val words = Iterator.empty // No words provided
+
+    Main.wordCloud(3, 1, 5, 1, 1, words, testOutputSink)
+
+    val output = testOutputSink.result.mkString(" ")
+    assert(output.isEmpty)
+  }
+
+  it should "exclude words shorter than the minimum length" in {
+    val testOutputSink = new TestOutputSink
+    val words = Iterator("a", "b", "cat", "dog")
+
+    Main.wordCloud(3, 3, 5, 1, 1, words, testOutputSink)
+
+    val output = testOutputSink.result.mkString(" ")
+    assert(!output.contains("cat"))
+    assert(!output.contains("dog"))
+  }
+
+  it should "filter out words below the minimum frequency" in {
+    val testOutputSink = new TestOutputSink
+    val words = Iterator("apple", "banana", "apple", "orange", "banana")
+
+    Main.wordCloud(3, 1, 5, 1, 3, words, testOutputSink) // Min frequency set to 3
+
+    val output = testOutputSink.result.mkString(" ")
+    assert(!output.contains("apple"))
+    assert(!output.contains("banana"))
+    assert(!output.contains("orange"))
+  }
+
+  it should "correctly count and output words when queue size is matched" in {
+    val testOutputSink = new TestOutputSink
+    val words = Iterator("apple", "banana", "orange")
+
+    Main.wordCloud(3, 1, 3, 1, 1, words, testOutputSink)
+
+    val output = testOutputSink.result.mkString(" ")
+    assert(output.contains("apple: 1"))
+    assert(output.contains("banana: 1"))
+    assert(output.contains("orange: 1"))
+  }
+
+  it should "count repeated words correctly" in {
+    val testOutputSink = new TestOutputSink
+    val words = Iterator("apple", "banana", "apple", "banana", "banana")
+
+    Main.wordCloud(3, 1, 5, 1, 1, words, testOutputSink)
+
+    val output = testOutputSink.result.mkString(" ")
+    assert(output.contains("apple: 2"))
+    assert(output.contains("banana: 3"))
+  }
+
+  it should "handle boundary conditions with single word" in {
+    val testOutputSink = new TestOutputSink
+    val words = Iterator("apple")
+
+    Main.wordCloud(1, 1, 1, 1, 1, words, testOutputSink)
+
+    val output = testOutputSink.result.mkString(" ")
+    assert(output.contains("apple: 1"))
+  }
+
+  it should "handle repeated single word in the queue" in {
+    val testOutputSink = new TestOutputSink
+    val words = Iterator.fill(5)("apple") // Five "apple" words
+
+    Main.wordCloud(1, 1, 5, 1, 1, words, testOutputSink)
+
+    val output = testOutputSink.result.mkString(" ")
+    assert(output.contains("apple: 5"))
+  }
 }
+
+
+
     
 end WordCloudSpec
