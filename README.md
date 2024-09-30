@@ -72,8 +72,12 @@ On Windows, you might need backslashes. WSL (Windows Subsystem for Linux) recomm
 ## Extra Credit
 
 We believe we completed the following extra credit requirements:
-1 Read from a file an "ignore list" of words to be ignored regardless of length.
-0.5 Treat words case-insensitively, i.e., ignore capitalization and the like.
-0.5 Add an command-line argument for updating the word cloud only every k steps.
+
+1 Read from a file an "ignore list" of words to be ignored regardless of length. 
+
+0.5 Treat words case-insensitively, i.e., ignore capitalization and the like. 
+
+0.5 Add an command-line argument for updating the word cloud only every k steps. 
+
 1 Add an command-line argument for a minimum frequency to include a word in the word cloud.
 
