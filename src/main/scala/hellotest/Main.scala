@@ -77,22 +77,8 @@ object Main:
     @arg(short = 's', doc = "number of steps between word cloud updates") everyKSteps: Int = 10,
     @arg(short = 'f', doc = "minimum frequency for a word to be included in the cloud") minFrequency: Int = MIN_FREQ
     ): Unit =
-
-    println("Hello mainargs!")
-    println(s"Today's date is ${java.time.LocalDate.now}.")
-    println()
-    println("You provided the following command-line arguments:")
-    println(s"cloudSize = $cloudSize")
-    println(s"minLength = $minLength")
-    println(s"windowSize = $windowSize")
-    println(s"everyKSteps = $everyKSteps")
-    println(s"minFrequency = $minFrequency")
-    logger.debug(f"howMany=$cloudSize minLength=$minLength lastNWords=$windowSize everyKSteps=$everyKSteps minFrequency=$minFrequency")
     
-    //var cloud_size = CLOUD_SIZE
-    //var length_at_least = LENGTH_AT_LEAST
-    //var window_size = WINDOW_SIZE
-    //var min_freq = MIN_FREQ
+    logger.debug(f"howMany=$cloudSize minLength=$minLength lastNWords=$windowSize everyKSteps=$everyKSteps minFrequency=$minFrequency")
     
     // Set up input from stdin and process words
     val lines = scala.io.Source.fromInputStream(System.in)("UTF-8").getLines
@@ -101,7 +87,6 @@ object Main:
 
     wordCloud(cloudSize, minLength, windowSize, everyKSteps, minFrequency, words, outputSink)
    
-
   def wordCloud(
     cloudSize: Int,
     minLength: Int,
@@ -111,6 +96,7 @@ object Main:
     words: Iterator[String],
     output: OutputSink // Accept words as an argument
   ): Unit = 
+    
     val queue = new CircularFifoQueue[String](windowSize)
 
     var stepCounter = 0
