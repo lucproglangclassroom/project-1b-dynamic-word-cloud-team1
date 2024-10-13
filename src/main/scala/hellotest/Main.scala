@@ -96,37 +96,65 @@ object Main:
     words: Iterator[String],
     output: OutputSink // Accept words as an argument
   ): Unit = 
-    
-    val queue = new CircularFifoQueue[String](windowSize)
+    // val queue = new CircularFifoQueue[String](windowSize)
+    val initialState = (new CircularFifoQueue[String](windowSize), mutable.Map[String, Int]())
 
-    var stepCounter = 0
-
-    // Process words and update word cloud
-    for (word <- words.filter(_.length >= minLength)) {
+    // var stepCounter = 0
+    words.filter(_.length >= minLength)
+    .scanLeft(initialState) { case ((queue, wordCount), word) =>
+      // Update the sliding queue
+      if (queue.size == windowSize) queue.remove()
       queue.add(word)
-      stepCounter += 1
+      
+      // Update word count map
+      wordCount(word) = wordCount.getOrElse(word, 0) + 1
+      (queue, wordCount)
+    }
 
-      // start processing when the queue is full with window_size
-      if (queue.size == windowSize && stepCounter % everyKSteps == 0) {
-        val wordCount = mutable.Map[String, Int]()
-        queue.forEach { w =>
-          wordCount(w) = wordCount.getOrElse(w, 0) + 1
-        }
-
-        val sortedWords = wordCount.toSeq.
-        filter { case (_, count) => count >= minFrequency }
+    // Process every k steps
+    .zipWithIndex
+    .filter { case (_, index) => index % everyKSteps == 0 && initialState._1.size == windowSize }
+    .foreach { case ((queue, wordCount), _) =>
+      val sortedWords = wordCount.toSeq
+        .filter { case (_, count) => count >= minFrequency }
         .sortBy { case (word, count) => (-count, word) }
 
-        val topWords = sortedWords.take(cloudSize)
-        if (topWords.nonEmpty) {
-          output.doOutput(topWords.map { case (word, count) => s"$word: $count" }.mkString(" "))
-          //println(topWords.map { case (word, count) => s"$word: $count" }.mkString(" "))
-          if (System.out.checkError()) {
-            println("Error writing to stdout. Exiting.")
-            sys.exit(1)  // Exit with a failure code
-          }
+      val topWords = sortedWords.take(cloudSize)
+      if (topWords.nonEmpty) {
+        output.doOutput(topWords.map { case (word, count) => s"$word: $count" }.mkString(" "))
+        if (System.out.checkError()) {
+          println("Error writing to stdout. Exiting.")
+          sys.exit(1)
         }
       }
     }
+
+    // Process words and update word cloud
+    // for (word <- words.filter(_.length >= minLength)) {
+    //   queue.add(word)
+    //   stepCounter += 1
+
+    //   // start processing when the queue is full with window_size
+    //   if (queue.size == windowSize && stepCounter % everyKSteps == 0) {
+    //     val wordCount = mutable.Map[String, Int]()
+    //     queue.forEach { w =>
+    //       wordCount(w) = wordCount.getOrElse(w, 0) + 1
+    //     }
+
+    //     val sortedWords = wordCount.toSeq.
+    //     filter { case (_, count) => count >= minFrequency }
+    //     .sortBy { case (word, count) => (-count, word) }
+
+    //     val topWords = sortedWords.take(cloudSize)
+    //     if (topWords.nonEmpty) {
+    //       output.doOutput(topWords.map { case (word, count) => s"$word: $count" }.mkString(" "))
+    //       //println(topWords.map { case (word, count) => s"$word: $count" }.mkString(" "))
+    //       if (System.out.checkError()) {
+    //         println("Error writing to stdout. Exiting.")
+    //         sys.exit(1)  // Exit with a failure code
+    //       }
+    //     }
+    //   }
+    // }
 
 end Main
