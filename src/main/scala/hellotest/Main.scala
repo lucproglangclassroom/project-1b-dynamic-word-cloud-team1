@@ -2,6 +2,7 @@ package hellotest
 
 import org.apache.commons.collections4.queue.CircularFifoQueue
 import scala.collection.mutable
+import scala.collection.immutable.Queue
 import scala.language.unsafeNulls
 import scala.io.Source
 import mainargs.ParserForMethods
@@ -112,18 +113,15 @@ object Main:
     output: OutputSink // Accept words as an argument
   ): Unit = 
     // val queue = new CircularFifoQueue[String](windowSize)
-    val initialState = (new CircularFifoQueue[String](windowSize), mutable.Map[String, Int]())
+    val initialState = (Queue.empty[String], Map.empty[String, Int])
 
     // var stepCounter = 0
-    words.filter(_.length >= minLength)
-    .scanLeft(initialState) { case ((queue, wordCount), word) =>
-      // Update the sliding queue
-      if (queue.size == windowSize) queue.remove()
-      queue.add(word)
-      
-      // Update word count map
-      wordCount(word) = wordCount.getOrElse(word, 0) + 1
-      (queue, wordCount)
+    words
+    .filter(_.length >= minLength)
+    .scanLeft((Queue.empty[String], Map.empty[String, Int])) { case ((queue, wordCount), word) =>
+      val updatedQueue = if (queue.size == windowSize) queue.dequeue._2.enqueue(word) else queue.enqueue(word)
+      val updatedWordCount = wordCount + (word -> (wordCount.getOrElse(word, 0) + 1))
+      (updatedQueue, updatedWordCount)
     }
 
     // Process every k steps
