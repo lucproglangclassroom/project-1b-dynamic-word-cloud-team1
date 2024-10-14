@@ -13,6 +13,7 @@ import org.scalatestplus.scalacheck.Checkers
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Prop._
 import scala.jdk.CollectionConverters._
+import mainargs.ParserForMethods
 
 
 class WordCloudSpec extends AnyFlatSpec with Matchers{
@@ -73,6 +74,16 @@ class WordCloudSpec extends AnyFlatSpec with Matchers{
     assert(output.contains("apple: 2"))
     assert(output.contains("grape: 1"))
   }
+  it should "handle a very large input" in {
+    val testOutputSink = new TestOutputSink
+    val words = Iterator.fill(1000)("apple") // Simulate a large input
+
+    Main.wordCloud(3, 1, 1000, 1, 1, words, testOutputSink)
+
+    val output = testOutputSink.result.mkString(" ")
+    assert(output.contains("apple: 1000"))
+  }
+
 
   it should "output word counts in the correct format" in {
     // Setup
@@ -160,16 +171,61 @@ class WordCloudSpec extends AnyFlatSpec with Matchers{
     assert(output.contains("apple: 1"))
   }
 
-  it should "handle repeated single word in the queue" in {
-    val testOutputSink = new TestOutputSink
-    val words = Iterator.fill(5)("apple") // Five "apple" words
 
-    Main.wordCloud(1, 1, 5, 1, 1, words, testOutputSink)
+  
+  it should "handle special characters in words" in {
+    val testOutputSink = new TestOutputSink
+    val words = Iterator("apple!", "banana?", "apple.", "banana")
+
+    Main.wordCloud(3, 1, 4, 1, 1, words, testOutputSink)
 
     val output = testOutputSink.result.mkString(" ")
-    assert(output.contains("apple: 5"))
+    assert(output.contains("apple.: 1"))
+    assert(output.contains("banana: 1"))
   }
+  it should "handle invalid input gracefully" in {
+  val testOutputSink = new TestOutputSink
+  val words = Iterator("!!invalid", "@@@input", "word1", "word2")
+
+  Main.wordCloud(3, 1, 4, 1, 1, words, testOutputSink)
+
+  val output = testOutputSink.result.mkString(" ")
+  assert(output.contains("word1") || output.contains("word2")) // Check if valid words are processed
 }
+/*
+"The run method" should "process command-line arguments correctly" in {
+  
+    val testOutputSink = new TestOutputSink
+    
+      // Simulate command-line arguments
+      val args = Array(
+        "--cloudSize", "5",
+        "--minLength", "3",
+        "--windowSize", "10",
+        "--everyKSteps", "2",
+        "--minFrequency", "1"
+      )
+
+      // Call the run method directly
+     ParserForMethods(Main).runOrExit(args.toIndexedSeq)
+
+      // Capture the output
+      val output = testOutputSink.result.mkString(" ")
+
+      // Assertions
+      output should include("Hello mainargs!")
+      output should include("Today's date is")
+      output should include("You provided the following command-line arguments:")
+      output should include("cloudSize = 5")
+      output should include("minLength = 3")
+      output should include("windowSize = 10")
+      output should include("everyKSteps = 2")
+      output should include("minFrequency = 1")
+    }
+      */
+  }
+  
+
 
 
 

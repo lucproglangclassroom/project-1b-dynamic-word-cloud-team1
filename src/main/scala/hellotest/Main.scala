@@ -10,6 +10,7 @@ import mainargs.arg
 import mainargs.{main, arg, ParserForMethods, Flag}
 import org.log4s._
 import sun.misc.{Signal, SignalHandler}
+import scala.collection.immutable.Queue
 
 // For console input, just in case
 import scala.io.StdIn.{readLine, readInt}
@@ -78,31 +79,17 @@ object Main:
     @arg(short = 's', doc = "number of steps between word cloud updates") everyKSteps: Int = 10,
     @arg(short = 'f', doc = "minimum frequency for a word to be included in the cloud") minFrequency: Int = MIN_FREQ
     ): Unit =
-
-    println("Hello mainargs!")
-    println(s"Today's date is ${java.time.LocalDate.now}.")
-    println()
-    println("You provided the following command-line arguments:")
-    println(s"cloudSize = $cloudSize")
-    println(s"minLength = $minLength")
-    println(s"windowSize = $windowSize")
-    println(s"everyKSteps = $everyKSteps")
-    println(s"minFrequency = $minFrequency")
+    
     logger.debug(f"howMany=$cloudSize minLength=$minLength lastNWords=$windowSize everyKSteps=$everyKSteps minFrequency=$minFrequency")
     
-    //var cloud_size = CLOUD_SIZE
-    //var length_at_least = LENGTH_AT_LEAST
-    //var window_size = WINDOW_SIZE
-    //var min_freq = MIN_FREQ
-    
     // Set up input from stdin and process words
-    val lines = scala.io.Source.fromInputStream(System.in)("UTF-8").getLines
+    val lines = scala.io.Source.stdin.getLines
+    lines.foreach(line => println(s"Read line: $line")) // Debugging line
     val words = lines.flatMap(l => l.split("(?U)[^\\p{Alpha}0-9']+")).map(_.toLowerCase)
     val outputSink = new ConsoleOutputSink()
 
     wordCloud(cloudSize, minLength, windowSize, everyKSteps, minFrequency, words, outputSink)
    
-
   def wordCloud(
     cloudSize: Int,
     minLength: Int,
@@ -112,10 +99,8 @@ object Main:
     words: Iterator[String],
     output: OutputSink // Accept words as an argument
   ): Unit = 
-    // val queue = new CircularFifoQueue[String](windowSize)
     val initialState = (Queue.empty[String], Map.empty[String, Int])
 
-    // var stepCounter = 0
     words
     .filter(_.length >= minLength)
     .scanLeft((Queue.empty[String], Map.empty[String, Int])) { case ((queue, wordCount), word) =>
@@ -131,16 +116,18 @@ object Main:
       val sortedWords = wordCount.toSeq
         .filter { case (_, count) => count >= minFrequency }
         .sortBy { case (word, count) => (-count, word) }
-
+        sortedWords.take(cloudSize).map { case (word, count) => s"$word: $count" }.mkString(" ")
       val topWords = sortedWords.take(cloudSize)
-      if (topWords.nonEmpty) {
+        if (topWords.nonEmpty) {
+        logger.trace("should be working")
         output.doOutput(topWords.map { case (word, count) => s"$word: $count" }.mkString(" "))
         if (System.out.checkError()) {
-          println("Error writing to stdout. Exiting.")
+          logger.error("Error writing to stdout. Exiting.")
           sys.exit(1)
         }
       }
     }
+    
 
     // Process words and update word cloud
     // for (word <- words.filter(_.length >= minLength)) {
