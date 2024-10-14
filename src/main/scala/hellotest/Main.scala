@@ -2,6 +2,7 @@ package hellotest
 
 import org.apache.commons.collections4.queue.CircularFifoQueue
 import scala.collection.mutable
+import scala.collection.immutable.Queue
 import scala.language.unsafeNulls
 import scala.io.Source
 import mainargs.ParserForMethods
