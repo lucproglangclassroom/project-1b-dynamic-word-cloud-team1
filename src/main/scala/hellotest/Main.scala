@@ -40,9 +40,9 @@ class TestOutputSink extends OutputSink {
 
 object Main:
   // Default values for arguments
-  val CLOUD_SIZE = 10
+  val CLOUD_SIZE = 5
   val LENGTH_AT_LEAST = 6
-  val WINDOW_SIZE = 1000
+  val WINDOW_SIZE = 5
   val MIN_FREQ = 1
   private val logger = org.log4s.getLogger
   //logger.debug(f"howMany = $howMany minLength = $minLength lastNWords = $lastNWords")
@@ -83,11 +83,18 @@ object Main:
     logger.debug(f"howMany=$cloudSize minLength=$minLength lastNWords=$windowSize everyKSteps=$everyKSteps minFrequency=$minFrequency")
     
     // Set up input from stdin and process words
-    val lines = scala.io.Source.stdin.getLines
-    lines.foreach(line => println(s"Read line: $line")) // Debugging line
-    val words = lines.flatMap(l => l.split("(?U)[^\\p{Alpha}0-9']+")).map(_.toLowerCase)
-    val outputSink = new ConsoleOutputSink()
+    val lines = scala.io.Source.fromInputStream(System.in)("UTF-8").getLines.toList
+    //val lines = List("Example sentence with words of various lengths: elephant, kangaroo, zebra.")
 
+    println(s"Lines captured: ${lines.mkString(", ")}") // Debugging line
+
+    val words = lines.flatMap(l => l.split("(?U)[^\\p{Alpha}0-9']+")).map(_.toLowerCase)
+    println(s"Words captured: ${words.mkString(", ")}") // Debugging line
+
+    // Convert words to iterator after capturing
+    
+    //wordIterator.foreach(word => println(s"Word: $word")) // Debugging line
+    val outputSink = new ConsoleOutputSink()
     wordCloud(cloudSize, minLength, windowSize, everyKSteps, minFrequency, words, outputSink)
    
   def wordCloud(
@@ -96,12 +103,14 @@ object Main:
     windowSize: Int,
     everyKSteps: Int,
     minFrequency: Int,
-    words: Iterator[String],
+    words: List[String],
     output: OutputSink // Accept words as an argument
   ): Unit = {
   println(s"Starting wordCloud with cloudSize=$cloudSize, minLength=$minLength, windowSize=$windowSize, everyKSteps=$everyKSteps, minFrequency=$minFrequency")
-
+  val wordIterator = words.iterator
+  words.foreach(word => println(s"Word: $word")) // Debugging line
   val initialState = (Queue.empty[String], Map.empty[String, Int])
+  words.foreach(word => println(s"Word: $word")) // Debugging line
 
   val results = words.filter(_.length >= minLength).scanLeft(initialState) {
     case ((queue, wordCount), word) =>

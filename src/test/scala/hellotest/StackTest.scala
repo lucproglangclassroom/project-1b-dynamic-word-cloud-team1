@@ -36,7 +36,7 @@ class WordCloudSpec extends AnyFlatSpec with Matchers{
   "The word processing logic" should "correctly count word frequencies" in {
     // Setup
     val testOutputSink = new TestOutputSink
-    val words = Iterator("apple", "banana", "apple", "orange", "banana", "banana")
+    val words = List("apple", "banana", "apple", "orange", "banana", "banana")
 
     // Call the method
     val cloudSize = 3
@@ -57,7 +57,7 @@ class WordCloudSpec extends AnyFlatSpec with Matchers{
   it should "return top N words correctly" in {
     // Setup
     val testOutputSink = new TestOutputSink
-    val words = Iterator("apple", "banana", "apple", "orange", "banana", "banana", "grape")
+    val words = List("apple", "banana", "apple", "orange", "banana", "banana", "grape")
 
     // Call the method
     val cloudSize = 3
@@ -76,7 +76,7 @@ class WordCloudSpec extends AnyFlatSpec with Matchers{
   }
   it should "handle a very large input" in {
     val testOutputSink = new TestOutputSink
-    val words = Iterator.fill(1000)("apple") // Simulate a large input
+    val words = List.fill(1000)("apple") // Simulate a large input
 
     Main.wordCloud(3, 1, 1000, 1, 1, words, testOutputSink)
 
@@ -88,7 +88,7 @@ class WordCloudSpec extends AnyFlatSpec with Matchers{
   it should "output word counts in the correct format" in {
     // Setup
     val testOutputSink = new TestOutputSink
-    val words = Iterator("apple", "banana", "apple", "banana", "banana")
+    val words = List("apple", "banana", "apple", "banana", "banana")
 
     // Call the method
     val cloudSize = 3
@@ -107,7 +107,7 @@ class WordCloudSpec extends AnyFlatSpec with Matchers{
   
   it should "not produce output for empty input" in {
     val testOutputSink = new TestOutputSink
-    val words = Iterator.empty // No words provided
+    val words = List.empty // No words provided
 
     Main.wordCloud(3, 1, 5, 1, 1, words, testOutputSink)
 
@@ -117,7 +117,7 @@ class WordCloudSpec extends AnyFlatSpec with Matchers{
 
   it should "exclude words shorter than the minimum length" in {
     val testOutputSink = new TestOutputSink
-    val words = Iterator("a", "b", "cat", "dog")
+    val words = List("a", "b", "cat", "dog")
 
     Main.wordCloud(3, 3, 5, 1, 1, words, testOutputSink)
 
@@ -128,7 +128,7 @@ class WordCloudSpec extends AnyFlatSpec with Matchers{
 
   it should "filter out words below the minimum frequency" in {
     val testOutputSink = new TestOutputSink
-    val words = Iterator("apple", "banana", "apple", "orange", "banana")
+    val words = List("apple", "banana", "apple", "orange", "banana")
 
     Main.wordCloud(3, 1, 5, 1, 3, words, testOutputSink) // Min frequency set to 3
 
@@ -140,7 +140,7 @@ class WordCloudSpec extends AnyFlatSpec with Matchers{
 
   it should "correctly count and output words when queue size is matched" in {
     val testOutputSink = new TestOutputSink
-    val words = Iterator("apple", "banana", "orange")
+    val words = List("apple", "banana", "orange")
 
     Main.wordCloud(3, 1, 3, 1, 1, words, testOutputSink)
 
@@ -152,7 +152,7 @@ class WordCloudSpec extends AnyFlatSpec with Matchers{
 
   it should "count repeated words correctly" in {
     val testOutputSink = new TestOutputSink
-    val words = Iterator("apple", "banana", "apple", "banana", "banana")
+    val words = List("apple", "banana", "apple", "banana", "banana")
 
     Main.wordCloud(3, 1, 5, 1, 1, words, testOutputSink)
 
@@ -163,7 +163,7 @@ class WordCloudSpec extends AnyFlatSpec with Matchers{
 
   it should "handle boundary conditions with single word" in {
     val testOutputSink = new TestOutputSink
-    val words = Iterator("apple")
+    val words = List("apple")
 
     Main.wordCloud(1, 1, 1, 1, 1, words, testOutputSink)
 
@@ -175,7 +175,7 @@ class WordCloudSpec extends AnyFlatSpec with Matchers{
   
   it should "handle special characters in words" in {
     val testOutputSink = new TestOutputSink
-    val words = Iterator("apple!", "banana?", "apple.", "banana")
+    val words = List("apple!", "banana?", "apple.", "banana")
 
     Main.wordCloud(3, 1, 4, 1, 1, words, testOutputSink)
 
@@ -185,7 +185,7 @@ class WordCloudSpec extends AnyFlatSpec with Matchers{
   }
   it should "handle invalid input gracefully" in {
   val testOutputSink = new TestOutputSink
-  val words = Iterator("!!invalid", "@@@input", "word1", "word2")
+  val words = List("!!invalid", "@@@input", "word1", "word2")
 
   Main.wordCloud(3, 1, 4, 1, 1, words, testOutputSink)
 
