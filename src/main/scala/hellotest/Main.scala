@@ -9,6 +9,7 @@ import mainargs.arg
 import mainargs.{main, arg, ParserForMethods, Flag}
 import org.log4s._
 import sun.misc.{Signal, SignalHandler}
+import scala.collection.immutable.Queue
 
 // For console input, just in case
 import scala.io.StdIn.{readLine, readInt}
@@ -81,7 +82,8 @@ object Main:
     logger.debug(f"howMany=$cloudSize minLength=$minLength lastNWords=$windowSize everyKSteps=$everyKSteps minFrequency=$minFrequency")
     
     // Set up input from stdin and process words
-    val lines = scala.io.Source.fromInputStream(System.in)("UTF-8").getLines
+    val lines = scala.io.Source.stdin.getLines
+    lines.foreach(line => println(s"Read line: $line")) // Debugging line
     val words = lines.flatMap(l => l.split("(?U)[^\\p{Alpha}0-9']+")).map(_.toLowerCase)
     val outputSink = new ConsoleOutputSink()
 
@@ -96,20 +98,21 @@ object Main:
     words: Iterator[String],
     output: OutputSink // Accept words as an argument
   ): Unit = 
+    val initialState = (Queue.empty[String], Map.empty[String, Int])
     // val queue = new CircularFifoQueue[String](windowSize)
-    val initialState = (new CircularFifoQueue[String](windowSize), mutable.Map[String, Int]())
+    //val initialState = (new CircularFifoQueue[String](windowSize), mutable.Map[String, Int]())
 
     // var stepCounter = 0
-    words.filter(_.length >= minLength)
+    val results = words.filter(_.length >= minLength)
     .scanLeft(initialState) { case ((queue, wordCount), word) =>
-      // Update the sliding queue
-      if (queue.size == windowSize) queue.remove()
-      queue.add(word)
-      
-      // Update word count map
-      wordCount(word) = wordCount.getOrElse(word, 0) + 1
-      (queue, wordCount)
+    val (newQueue, updatedCount) = if (queue.size == windowSize) {
+      val (dequeuedWord, updatedQueue) = queue.dequeue // Correctly destructuring the dequeued element
+      (updatedQueue.enqueue(word), wordCount.updated(dequeuedWord, wordCount.getOrElse(dequeuedWord, 0) - 1))
+    } else {
+      (queue.enqueue(word), wordCount.updated(word, wordCount.getOrElse(word, 0) + 1))
     }
+    (newQueue, updatedCount) // Return the new state
+  }
 
     // Process every k steps
     .zipWithIndex
@@ -118,16 +121,18 @@ object Main:
       val sortedWords = wordCount.toSeq
         .filter { case (_, count) => count >= minFrequency }
         .sortBy { case (word, count) => (-count, word) }
-
+        sortedWords.take(cloudSize).map { case (word, count) => s"$word: $count" }.mkString(" ")
       val topWords = sortedWords.take(cloudSize)
-      if (topWords.nonEmpty) {
+        if (topWords.nonEmpty) {
+        logger.trace("should be working")
         output.doOutput(topWords.map { case (word, count) => s"$word: $count" }.mkString(" "))
         if (System.out.checkError()) {
-          println("Error writing to stdout. Exiting.")
+          logger.error("Error writing to stdout. Exiting.")
           sys.exit(1)
         }
       }
     }
+    
 
     // Process words and update word cloud
     // for (word <- words.filter(_.length >= minLength)) {
