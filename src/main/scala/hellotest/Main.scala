@@ -97,41 +97,48 @@ object Main:
     minFrequency: Int,
     words: Iterator[String],
     output: OutputSink // Accept words as an argument
-  ): Unit = 
-    val initialState = (Queue.empty[String], Map.empty[String, Int])
-    // val queue = new CircularFifoQueue[String](windowSize)
-    //val initialState = (new CircularFifoQueue[String](windowSize), mutable.Map[String, Int]())
+  ): Unit = {
+  println(s"Starting wordCloud with cloudSize=$cloudSize, minLength=$minLength, windowSize=$windowSize, everyKSteps=$everyKSteps, minFrequency=$minFrequency")
 
-    // var stepCounter = 0
-    val results = words.filter(_.length >= minLength)
-    .scanLeft(initialState) { case ((queue, wordCount), word) =>
-    val (newQueue, updatedCount) = if (queue.size == windowSize) {
-      val (dequeuedWord, updatedQueue) = queue.dequeue // Correctly destructuring the dequeued element
-      (updatedQueue.enqueue(word), wordCount.updated(dequeuedWord, wordCount.getOrElse(dequeuedWord, 0) - 1))
-    } else {
-      (queue.enqueue(word), wordCount.updated(word, wordCount.getOrElse(word, 0) + 1))
-    }
-    (newQueue, updatedCount) // Return the new state
-  }
+  val initialState = (Queue.empty[String], Map.empty[String, Int])
 
-    // Process every k steps
-    .zipWithIndex
-    .filter { case (_, index) => index % everyKSteps == 0 && initialState._1.size == windowSize }
-    .foreach { case ((queue, wordCount), _) =>
-      val sortedWords = wordCount.toSeq
-        .filter { case (_, count) => count >= minFrequency }
-        .sortBy { case (word, count) => (-count, word) }
-        sortedWords.take(cloudSize).map { case (word, count) => s"$word: $count" }.mkString(" ")
-      val topWords = sortedWords.take(cloudSize)
+  val results = words.filter(_.length >= minLength).scanLeft(initialState) {
+    case ((queue, wordCount), word) =>
+      println(s"Processing word: $word")
+      val (updatedQueue, evictedWordCount) = if (queue.size == windowSize) {
+        val (dequeuedWord, updatedQueue) = queue.dequeue
+        println(s"Dequeued word: $dequeuedWord")
+        (updatedQueue.enqueue(word), wordCount.updated(dequeuedWord, wordCount.getOrElse(dequeuedWord, 0) - 1))
+      } else {
+        (queue.enqueue(word), wordCount)
+      }
+      val updatedWordCount = evictedWordCount.updated(word, evictedWordCount.getOrElse(word, 0) + 1)
+      println(s"Updated word count: $updatedWordCount")
+      (updatedQueue, updatedWordCount)
+  }.toList // Ensure it's fully evaluated
+
+  println(s"Results after scanLeft: $results")
+
+  results.zipWithIndex.foreach {
+    case ((queue, wordCount), index) =>
+      val validStep = index % everyKSteps == 0 && queue.size == windowSize
+      println(s"Index: $index, validStep: $validStep")
+      if (validStep) {
+        println(s"Queue at step $index: ${queue.mkString(", ")}")
+        val sortedWords = wordCount.toSeq.filter { case (_, count) => count >= minFrequency }
+          .sortBy { case (word, count) => (-count, word) }
+        val topWords = sortedWords.take(cloudSize)
+        println(s"Top words: ${topWords.mkString(", ")}")
         if (topWords.nonEmpty) {
-        logger.trace("should be working")
-        output.doOutput(topWords.map { case (word, count) => s"$word: $count" }.mkString(" "))
-        if (System.out.checkError()) {
-          logger.error("Error writing to stdout. Exiting.")
-          sys.exit(1)
+          output.doOutput(topWords.map { case (word, count) => s"$word: $count" }.mkString(" "))
+          if (System.out.checkError()) {
+            println("Error writing to stdout. Exiting.")
+            sys.exit(1)
+          }
         }
       }
-    }
+  }
+}
     
 
     // Process words and update word cloud
