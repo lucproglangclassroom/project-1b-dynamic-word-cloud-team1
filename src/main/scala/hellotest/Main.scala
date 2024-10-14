@@ -103,9 +103,18 @@ object Main:
 
     words
     .filter(_.length >= minLength)
+    .map(_.replaceAll("[^\\p{Alpha}0-9'.]", ""))
     .scanLeft((Queue.empty[String], Map.empty[String, Int])) { case ((queue, wordCount), word) =>
       val updatedQueue = if (queue.size == windowSize) queue.dequeue._2.enqueue(word) else queue.enqueue(word)
-      val updatedWordCount = wordCount + (word -> (wordCount.getOrElse(word, 0) + 1))
+      val updatedWordCount = if (queue.nonEmpty) {
+        val wordToDequeue = queue.dequeue._1
+        wordCount.updatedWith(wordToDequeue) {
+          case Some(count) if count > 1 => Some(count - 1)
+          case _ => None
+        }.updated(word, wordCount.getOrElse(word, 0) + 1)
+      } else {
+        wordCount.updated(word, wordCount.getOrElse(word, 0) + 1)
+      }
       (updatedQueue, updatedWordCount)
     }
 
@@ -113,12 +122,14 @@ object Main:
     .zipWithIndex
     .filter { case (_, index) => index % everyKSteps == 0 && initialState._1.size == windowSize }
     .foreach { case ((queue, wordCount), _) =>
-      val sortedWords = wordCount.toSeq
+      val sortedWords = wordCount.filter(_._2 >= minFrequency).toSeq
         .filter { case (_, count) => count >= minFrequency }
         .sortBy { case (word, count) => (-count, word) }
         sortedWords.take(cloudSize).map { case (word, count) => s"$word: $count" }.mkString(" ")
       val topWords = sortedWords.take(cloudSize)
         if (topWords.nonEmpty) {
+          val outputString = topWords.map { case (word, count) => s"$word: $count" }.mkString(" ")
+    output.doOutput(outputString)   
         logger.trace("should be working")
         output.doOutput(topWords.map { case (word, count) => s"$word: $count" }.mkString(" "))
         if (System.out.checkError()) {
