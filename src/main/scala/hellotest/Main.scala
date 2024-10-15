@@ -67,7 +67,7 @@ object Main:
 }
 
   def main(args: Array[String]): Unit =
-   //setupSigpipeHandler() 
+   setupSigpipeHandler() 
     ParserForMethods(this).runOrExit(args.toIndexedSeq)
     ()
 
