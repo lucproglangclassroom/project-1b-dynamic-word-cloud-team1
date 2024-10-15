@@ -138,7 +138,6 @@ object Main:
         val sortedWords = wordCount.toSeq.filter { case (_, count) => count >= minFrequency }
           .sortBy { case (word, count) => (-count, word) }
         val topWords = sortedWords.take(cloudSize)
-        println(s"Top words: ${topWords.mkString(", ")}")
         if (topWords.nonEmpty) {
           output.doOutput(topWords.map { case (word, count) => s"$word: $count" }.mkString(" "))
           if (System.out.checkError()) {
