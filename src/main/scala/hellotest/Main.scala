@@ -67,7 +67,7 @@ object Main:
 }
 
   def main(args: Array[String]): Unit =
-   setupSigpipeHandler() 
+   //setupSigpipeHandler() 
     ParserForMethods(this).runOrExit(args.toIndexedSeq)
     ()
 
@@ -123,18 +123,18 @@ object Main:
         (queue.enqueue(word), wordCount)
       }
       val updatedWordCount = evictedWordCount.updated(word, evictedWordCount.getOrElse(word, 0) + 1)
-      println(s"Updated word count: $updatedWordCount")
+     // println(s"Updated word count: $updatedWordCount")
       (updatedQueue, updatedWordCount)
   }.toList // Ensure it's fully evaluated
 
-  println(s"Results after scanLeft: $results")
+ // println(s"Results after scanLeft: $results")
 
   results.zipWithIndex.foreach {
     case ((queue, wordCount), index) =>
       val validStep = index % everyKSteps == 0 && queue.size == windowSize
-      println(s"Index: $index, validStep: $validStep")
+    //  println(s"Index: $index, validStep: $validStep")
       if (validStep) {
-        println(s"Queue at step $index: ${queue.mkString(", ")}")
+       // println(s"Queue at step $index: ${queue.mkString(", ")}")
         val sortedWords = wordCount.toSeq.filter { case (_, count) => count >= minFrequency }
           .sortBy { case (word, count) => (-count, word) }
         val topWords = sortedWords.take(cloudSize)
