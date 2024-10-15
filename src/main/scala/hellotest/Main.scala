@@ -67,7 +67,7 @@ object Main:
 }
 
   def main(args: Array[String]): Unit =
-    setupSigpipeHandler() 
+   setupSigpipeHandler() 
     ParserForMethods(this).runOrExit(args.toIndexedSeq)
     ()
 
@@ -86,10 +86,10 @@ object Main:
     val lines = scala.io.Source.fromInputStream(System.in)("UTF-8").getLines.toList
     //val lines = List("Example sentence with words of various lengths: elephant, kangaroo, zebra.")
 
-    println(s"Lines captured: ${lines.mkString(", ")}") // Debugging line
+   // println(s"Lines captured: ${lines.mkString(", ")}") // Debugging line
 
     val words = lines.flatMap(l => l.split("(?U)[^\\p{Alpha}0-9']+")).map(_.toLowerCase)
-    println(s"Words captured: ${words.mkString(", ")}") // Debugging line
+    //println(s"Words captured: ${words.mkString(", ")}") // Debugging line
 
     // Convert words to iterator after capturing
     
@@ -108,16 +108,16 @@ object Main:
   ): Unit = {
   println(s"Starting wordCloud with cloudSize=$cloudSize, minLength=$minLength, windowSize=$windowSize, everyKSteps=$everyKSteps, minFrequency=$minFrequency")
   val wordIterator = words.iterator
-  words.foreach(word => println(s"Word: $word")) // Debugging line
+  //words.foreach(word => println(s"Word: $word")) // Debugging line
   val initialState = (Queue.empty[String], Map.empty[String, Int])
-  words.foreach(word => println(s"Word: $word")) // Debugging line
+ // words.foreach(word => println(s"Word: $word")) // Debugging line
 
   val results = words.filter(_.length >= minLength).scanLeft(initialState) {
     case ((queue, wordCount), word) =>
-      println(s"Processing word: $word")
+     // println(s"Processing word: $word")
       val (updatedQueue, evictedWordCount) = if (queue.size == windowSize) {
         val (dequeuedWord, updatedQueue) = queue.dequeue
-        println(s"Dequeued word: $dequeuedWord")
+       // println(s"Dequeued word: $dequeuedWord")
         (updatedQueue.enqueue(word), wordCount.updated(dequeuedWord, wordCount.getOrElse(dequeuedWord, 0) - 1))
       } else {
         (queue.enqueue(word), wordCount)
